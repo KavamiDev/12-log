@@ -8,15 +8,15 @@ const TRAILER = /^([A-Za-z][A-Za-z0-9-]*):\s+(.+)$/;
 export function validateMilestone(message: string): string | null {
   const subject = message.replace(/\r\n/g, "\n").split("\n")[0].trim();
   if (!PREFIX.test(subject)) return null;
-  const week = subject.match(/^\w+\(([^)]*)\)/)?.[1];
-  if (week !== undefined && (!/^#\d{2}$/.test(week) || Number(week.slice(1)) > 51))
-    return "week must be (#00) to (#51)";
+  const num = subject.match(/^\w+\(([^)]*)\)/)?.[1];
+  if (num !== undefined && (!/^#\d{2}$/.test(num) || Number(num.slice(1)) > 11))
+    return "month must be (#00) to (#11)";
   const m = subject.match(SUBJECT);
   if (!m) {
     const text = subject.match(/^[^:]*:\s+(.*)$/)?.[1] ?? "";
     return text.length > 72 ? "subject is max 72 chars" : "format is type(#NN): subject";
   }
-  if (m[1] === "init" && m[2] === undefined) return "init needs a week: init(#NN): subject";
+  if (m[1] === "init" && m[2] === undefined) return "init needs a month: init(#NN): subject";
   return null;
 }
 
@@ -37,7 +37,7 @@ export function parseMilestone(message: string): ParsedMilestone | null {
 
   return {
     type: m[1] as MilestoneType,
-    week: m[2] === undefined ? null : Number(m[2]),
+    month: m[2] === undefined ? null : Number(m[2]),
     subject: m[3].trim(),
     body: paragraphs.join("\n\n"),
     trailers,

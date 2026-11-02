@@ -1,10 +1,11 @@
-# 52.log
+# 12.log
 
-Public build log for **52 paid products in 52 weeks**.
-Live: https://kavamidev.github.io/52-log/
+Public build log for **12 paid products in 12 months** (one a month, October 2026 to September 2027).
+It started as 52.log, one product a week; the pace changed to one a month on 2026-10-29.
+Live: https://kavamidev.github.io/12-log/
 
 The site has no backend. A GitHub Action reads milestone commits from every `KavamiDev`
-repo tagged with the **`52log`** topic, builds a static site and deploys it to GitHub Pages.
+repo tagged with the **`12log`** topic, builds a static site and deploys it to GitHub Pages.
 Repos without the topic are never read.
 
 ## Commit convention
@@ -12,7 +13,7 @@ Repos without the topic are never read.
 Only commits whose subject follows this format show up. Everything else is ignored.
 
 ```
-<type>(#<week>): <subject, max 72 chars>
+<type>(#<month>): <subject, max 72 chars>      #00 = Oct 2026 … #11 = Sep 2027
 
 <optional body>
 
@@ -21,16 +22,16 @@ Only commits whose subject follows this format show up. Everything else is ignor
 
 | type | when | trailers (last paragraph) |
 |---|---|---|
-| `init` | Monday, the idea. **Week required**: `init(#03): …` | `Name`, `For`, `Problem`, `Hypothesis`, `Scope`, `Price` |
-| `progress` | during the week | |
-| `cut` | Thursday night, scope frozen | |
-| `ship` | Sunday, it is live | `Demo`, `Video`, `Price: 5 EUR`, `Hours: 7` |
+| `init` | first week of the month, the idea. **Month required**: `init(#02): …` | `Name`, `For`, `Problem`, `Hypothesis`, `Scope`, `Price` |
+| `progress` | during the month | |
+| `cut` | the 21st, scope frozen | |
+| `ship` | before the month ends, it is live | `Demo`, `Video`, `Price: 5 EUR`, `Hours: 7` |
 | `verdict` | 30 days after ship | `Visitors`, `Signups`, `Paying`, `Revenue: 15 EUR`, `Lesson` |
 
-Other commits of a repo inherit the week of its `init`.
+Other commits of a repo inherit the month of its `init`.
 
 ```
-ship(#01): Invoice Buddy is live
+ship(#02): Invoice Buddy is live
 
 Demo: https://invoice-buddy.pages.dev
 Price: 5 EUR
@@ -40,28 +41,28 @@ Hours: 7
 From any repo, load the reminder and the guard:
 
 ```bash
-git config commit.template /path/to/52-log/scripts/commit-template.txt
-git config core.hooksPath /path/to/52-log/templates/project/.githooks
+git config commit.template /path/to/12-log/scripts/commit-template.txt
+git config core.hooksPath /path/to/12-log/templates/project/.githooks
 ```
 
-The `commit-msg` hook rejects a malformed milestone (`ship(#1):`, `init:` without week,
+The `commit-msg` hook rejects a malformed milestone (`ship(#1):`, `init:` without month,
 subject over 72 chars). Normal commits are never blocked.
 
 ## New project in one command
 
 ```bash
-scripts/new-project.sh invoice-buddy 01 "Invoice Buddy"
+scripts/new-project.sh invoice-buddy 02 "Invoice Buddy"
 ```
 
 It creates `~/Desktop/invoice-buddy` from `templates/project/`, the public repo
-`KavamiDev/invoice-buddy` with the `52log` topic and sets the secrets. If Cloudflare keys
-are configured, it also creates the Cloudflare Pages project and fills the repo Website field. Then it prints the `init(#01)` commit for you to
+`KavamiDev/invoice-buddy` with the `12log` topic and sets the secrets. If Cloudflare keys
+are configured, it also creates the Cloudflare Pages project and fills the repo Website field. Then it prints the `init(#02)` commit for you to
 make and push. From there:
 
 - with Cloudflare configured, every push to `main` deploys `public/` (or `$DEPLOY_DIR`,
   after `bun run build` if any) to Cloudflare Pages (`deploy.yml`, idle otherwise),
 - every push containing a milestone pings this repo, which rebuilds in ~2 minutes
-  (`notify-52log.yml`).
+  (`notify-12log.yml`).
 
 `DRY_RUN=1` prints the remote commands without running them.
 
@@ -69,7 +70,7 @@ make and push. From there:
 
 ```bash
 bun install
-bun run dev      # http://localhost:4321/52-log/ (dev fixture without GH_TOKEN)
+bun run dev      # http://localhost:4321/12-log/ (dev fixture without GH_TOKEN)
 bun run test     # Vitest
 bun run check    # astro check
 bun run build    # fetch + static build into dist/
@@ -83,12 +84,12 @@ Put `GH_TOKEN=…` in `.env` (gitignored) to build from real data locally.
 
 | token | where it is created | access | stored in |
 |---|---|---|---|
-| `GH_TOKEN` | GitHub › Settings › Developer settings › Fine-grained tokens | All repositories · Contents **read** · Metadata read | `52-log` repo secret, local `.env` |
-| `LOG_DISPATCH_TOKEN` | same | Only `KavamiDev/52-log` · Contents **read and write** (needed for `repository_dispatch`) | `.env`, copied to each project repo by the script |
+| `GH_TOKEN` | GitHub › Settings › Developer settings › Fine-grained tokens | All repositories · Contents **read** · Metadata read | `12-log` repo secret, local `.env` |
+| `LOG_DISPATCH_TOKEN` | same | Only `KavamiDev/12-log` · Contents **read and write** (needed for `repository_dispatch`) | `.env`, copied to each project repo by the script |
 | `CLOUDFLARE_API_TOKEN` *(optional)* | Cloudflare › My Profile › API Tokens › Create › "Cloudflare Pages: Edit" | your account | `.env`, copied by the script |
 | `CLOUDFLARE_ACCOUNT_ID` *(optional)* | Cloudflare dashboard, right column of Workers & Pages | | `.env`, set as a repo variable |
 
-`.env` at the root of this repo (gitignored; `~/.52log.env` works too):
+`.env` at the root of this repo (gitignored; `~/.12log.env` works too):
 
 ```
 GH_TOKEN=github_pat_…
@@ -102,8 +103,8 @@ created without hosting and each one picks its own.
 
 ### 2. This repo
 
-1. Create the public repo `KavamiDev/52-log` and push this folder.
-2. Add the topic **`52log`** to it (it is product #00, it must show up).
+1. Create the public repo `KavamiDev/12-log` and push this folder.
+2. Add the topic **`12log`** to it (it is product #00, it must show up).
 3. Settings › Pages › Source: **GitHub Actions**.
 4. Settings › Secrets and variables › Actions › New secret `GH_TOKEN`.
 5. `git config core.hooksPath templates/project/.githooks` and
@@ -113,7 +114,7 @@ created without hosting and each one picks its own.
 
 - [ ] `bun run test`, `bun run check`, `bun run build` pass locally.
 - [ ] `GH_TOKEN` secret set; Pages source is GitHub Actions.
-- [ ] Repo has the `52log` topic and its Website field is `https://kavamidev.github.io/52-log/`.
+- [ ] Repo has the `12log` topic and its Website field is `https://kavamidev.github.io/12-log/`.
 - [ ] First `build` run is green and the page shows **no** "DEV FIXTURE" banner.
 - [ ] `init(#00)` commit is visible on the site; SHA links to GitHub.
 - [ ] A repo without the topic (e.g. `interfonIA`) does not appear.

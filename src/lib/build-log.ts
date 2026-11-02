@@ -48,12 +48,12 @@ export function buildLog(input: {
       .sort((a, b) => Date.parse(a.c.date) - Date.parse(b.c.date));
 
     const init = parsed.find((x) => x.m.type === "init");
-    const repoWeek = init?.m.week ?? parsed.find((x) => x.m.week !== null)?.m.week;
-    if (repoWeek == null) continue;
+    const repoMonth = init?.m.month ?? parsed.find((x) => x.m.month !== null)?.m.month;
+    if (repoMonth == null) continue;
 
     const milestones: Milestone[] = parsed.map(({ c, m }) => ({
       ...m,
-      week: m.week ?? repoWeek,
+      month: m.month ?? repoMonth,
       body: repo.isPrivate ? "" : m.body,
       sha: c.sha,
       repo: repo.fullName,
@@ -62,7 +62,7 @@ export function buildLog(input: {
     }));
 
     products.push({
-      week: repoWeek,
+      month: repoMonth,
       slug: repo.name,
       name: init?.m.trailers.Name ?? input.names?.[repo.name] ?? titleCase(repo.name),
       repo: repo.fullName,
@@ -73,6 +73,6 @@ export function buildLog(input: {
     });
   }
 
-  products.sort((a, b) => a.week - b.week);
+  products.sort((a, b) => a.month - b.month);
   return { generatedAt: input.generatedAt, products };
 }

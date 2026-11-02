@@ -6,8 +6,8 @@ import Footer from "../components/Footer.astro";
 
 interface Props { title?: string; description?: string; fixture?: boolean }
 const {
-  title = `52.log · ${site.author}`,
-  description = "52 paid products in 52 weeks, built in public. Every entry is a real commit.",
+  title = `${site.title} · ${site.author}`,
+  description = "12 paid products in 12 months, built in public. Every entry is a real commit.",
   fixture = false,
 } = Astro.props;
 const og = new URL(`${import.meta.env.BASE_URL.replace(/\/$/, "")}/og.png`, Astro.site).href;

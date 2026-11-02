@@ -1,7 +1,7 @@
 
-# 52.log milestone commit (delete this block for a normal commit)
+# 12.log milestone commit (delete this block for a normal commit)
 #
-# <type>(#<week>): <subject, max 72 chars>
+# <type>(#<month>): <subject, max 72 chars>   (#00 = Oct 2026 … #11 = Sep 2027)
 #   type: init | progress | cut | ship | verdict
 #
 # init     For: / Problem: / Hypothesis: / Scope: / Price:

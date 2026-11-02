@@ -10,5 +10,5 @@
 - X account link (field `x` in `src/site.config.ts`, empty for now).
 - Auto-post on X when a `ship` commit lands (check X API free-tier quotas first).
 - Products, Revenue and RSS pages.
-- Light theme, dynamic OG image per week, analytics per product.
+- Light theme, dynamic OG image per month, analytics per product.
 - Admin UI (probably never: the topic + commits are the admin).

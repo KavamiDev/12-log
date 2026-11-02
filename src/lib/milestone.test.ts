@@ -2,13 +2,13 @@ import { describe, expect, it } from "vitest";
 import { parseMilestone, validateMilestone, parseAmount } from "./milestone";
 
 describe("parseMilestone", () => {
-  it("parses type, week, subject and trailers", () => {
+  it("parses type, month, subject and trailers", () => {
     const m = parseMilestone(
       "ship(#01): Invoice Buddy is live\n\nDemo: https://invoice-buddy.pages.dev\nVideo: https://youtu.be/xxxx\nPrice: 5 EUR\nHours: 7\n",
     );
     expect(m).toEqual({
       type: "ship",
-      week: 1,
+      month: 1,
       subject: "Invoice Buddy is live",
       body: "",
       trailers: { Demo: "https://invoice-buddy.pages.dev", Video: "https://youtu.be/xxxx", Price: "5 EUR", Hours: "7" },
@@ -19,7 +19,7 @@ describe("parseMilestone", () => {
     const m = parseMilestone("progress: auth works\n\nStripe is blocking.\nTomorrow: webhooks.\n\nHours: 3");
     expect(m?.body).toBe("Stripe is blocking.\nTomorrow: webhooks.");
     expect(m?.trailers).toEqual({ Hours: "3" });
-    expect(m?.week).toBeNull();
+    expect(m?.month).toBeNull();
   });
 
   it("treats a last paragraph that is not all trailers as body", () => {
@@ -38,10 +38,10 @@ describe("parseMilestone", () => {
     "wip",
     "shipping the fix", // starts with a type word but is not a milestone
     "Ship(#01): capitalised type",
-    "ship(#1): one-digit week",
-    "ship(#52): week out of range",
+    "ship(#1): one-digit month",
+    "ship(#12): month out of range",
     "ship:no space",
-    "init: no week on init",
+    "init: no month on init",
     `ship(#01): ${"x".repeat(73)}`,
   ])("ignores %j", (msg) => {
     expect(parseMilestone(msg)).toBeNull();
@@ -63,10 +63,10 @@ describe("validateMilestone (commit-msg hook)", () => {
   });
 
   it.each([
-    ["ship(#1): bad week", /week/],
-    ["ship(#60): bad week", /week/],
+    ["ship(#1): bad month", /month/],
+    ["ship(#60): bad month", /month/],
     ["ship:missing space", /format/],
-    ["init: forgot the week", /init/],
+    ["init: forgot the month", /init/],
     [`ship(#01): ${"x".repeat(73)}`, /72/],
   ])("rejects %j", (msg, err) => {
     expect(validateMilestone(msg)).toMatch(err);

@@ -1,28 +1,28 @@
 #!/bin/sh
-# Creates a new 52.log project: local folder, GitHub repo (topic 52log), secrets, and optionally Cloudflare Pages.
-# Usage: scripts/new-project.sh <slug> <week> ["Product Name"]
-# Secrets come from the environment, else <kit>/.env, else ~/.52log.env:
+# Creates a new 12.log project: local folder, GitHub repo (topic 12log), secrets, and optionally Cloudflare Pages.
+# Usage: scripts/new-project.sh <slug> <month> ["Product Name"]   (month: 00 = Oct 2026 … 11 = Sep 2027)
+# Secrets come from the environment, else <kit>/.env, else ~/.12log.env:
 #   LOG_DISPATCH_TOKEN (required), CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID (optional: no Cloudflare without them).
-# DRY_RUN=1 prints the remote commands instead of running them. DEST_DIR overrides ~/Desktop.
+# DRY_RUN=1 prints the remote commands instead of running them. DEST_DIR overrides ~/Desktop/Dev.
 set -eu
 
 OWNER=KavamiDev
 KIT=$(cd "$(dirname "$0")/.." && pwd)
 
-slug=${1:-}; week=${2:-}
-[ -n "$slug" ] && [ -n "$week" ] || { echo "usage: $0 <slug> <week> [\"Product Name\"]" >&2; exit 1; }
+slug=${1:-}; month=${2:-}
+[ -n "$slug" ] && [ -n "$month" ] || { echo "usage: $0 <slug> <month> [\"Product Name\"]" >&2; exit 1; }
 echo "$slug" | grep -Eq '^[a-z0-9][a-z0-9-]{0,57}$' || { echo "slug: lowercase letters, digits, dashes" >&2; exit 1; }
-echo "$week" | grep -Eq '^[0-9]{2}$' && [ "$week" -le 51 ] || { echo "week: 00 to 51" >&2; exit 1; }
+echo "$month" | grep -Eq '^[0-9]{2}$' && [ "$month" -le 11 ] || { echo "month: 00 to 11" >&2; exit 1; }
 name=${3:-$(echo "$slug" | awk -F- '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)} 1')}
 
-dest=${DEST_DIR:-$HOME/Desktop}/$slug
+dest=${DEST_DIR:-$HOME/Desktop/Dev}/$slug
 [ ! -e "$dest" ] || { echo "$dest already exists" >&2; exit 1; }
 
 run() { if [ "${DRY_RUN:-}" = 1 ]; then echo "[dry-run] $*"; else "$@"; fi; }
 
 # Reads KEY from the env files, tolerating "KEY = value" and quotes. Values are never printed.
 env_get() {
-  for f in "$KIT/.env" "$HOME/.52log.env"; do
+  for f in "$KIT/.env" "$HOME/.12log.env"; do
     [ -f "$f" ] || continue
     v=$(grep -E "^$1[[:space:]]*=" "$f" | head -n 1 | sed -E 's/^[^=]*=[[:space:]]*//; s/["'"'"'[:space:]]//g')
     [ -n "$v" ] && { printf %s "$v"; return; }
@@ -35,7 +35,7 @@ cloudflare=0
 [ -n "$CLOUDFLARE_API_TOKEN" ] && [ -n "$CLOUDFLARE_ACCOUNT_ID" ] && cloudflare=1
 
 if [ "${DRY_RUN:-}" != 1 ]; then
-  [ -n "$LOG_DISPATCH_TOKEN" ] || { echo "LOG_DISPATCH_TOKEN missing (in $KIT/.env or ~/.52log.env)" >&2; exit 1; }
+  [ -n "$LOG_DISPATCH_TOKEN" ] || { echo "LOG_DISPATCH_TOKEN missing (in $KIT/.env or ~/.12log.env)" >&2; exit 1; }
   gh auth status >/dev/null 2>&1 || { echo "run: gh auth login" >&2; exit 1; }
   export CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID
 fi
@@ -44,7 +44,7 @@ echo "→ $dest"
 cp -R "$KIT/templates/project" "$dest"
 cp "$KIT/scripts/commit-template.txt" "$dest/.gitmessage"
 for f in "$dest/README.md"; do
-  sed -i.bak -e "s|__NAME__|$name|g" -e "s|__WEEK__|$week|g" -e "s|__SLUG__|$slug|g" "$f" && rm "$f.bak"
+  sed -i.bak -e "s|__NAME__|$name|g" -e "s|__MONTH__|$month|g" -e "s|__SLUG__|$slug|g" "$f" && rm "$f.bak"
 done
 cd "$dest"
 git init -q -b main
@@ -53,7 +53,7 @@ git config commit.template .gitmessage
 
 echo "→ GitHub repo $OWNER/$slug"
 run gh repo create "$OWNER/$slug" --public --source . --remote origin
-run gh repo edit "$OWNER/$slug" --add-topic 52log
+run gh repo edit "$OWNER/$slug" --add-topic 12log
 
 url=""
 if [ "$cloudflare" = 1 ]; then
@@ -85,11 +85,11 @@ cat <<MSG
 
 Done.${url:+ $name will live at $url}
 ${url:-Hosting: none yet. Once the site is online: gh repo edit $OWNER/$slug --homepage <url>}
-Commit and push when ready (this is the first entry on 52.log):
+Commit and push when ready (this is the first entry on 12.log):
 
   cd $dest
   git add -A
-  git commit -m "init(#$week): $name" -m "For: 
+  git commit -m "init(#$month): $name" -m "For: 
 Problem: 
 Hypothesis: 
 Scope: 

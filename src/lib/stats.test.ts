@@ -4,30 +4,33 @@ import { productStatus, productFields, streak, counters, activityLevels, formatC
 
 const utc = (s: string) => Date.parse(s);
 let n = 0;
-const ms = (type: Milestone["type"], week: number, at: string, trailers: Record<string, string> = {}): Milestone => ({
-  sha: `sha${n++}`, repo: "KavamiDev/p", type, week, subject: "s", body: "", trailers,
+const ms = (type: Milestone["type"], month: number, at: string, trailers: Record<string, string> = {}): Milestone => ({
+  sha: `sha${n++}`, repo: "KavamiDev/p", type, month, subject: "s", body: "", trailers,
   committedAt: utc(at), url: null,
 });
-const product = (week: number, milestones: Milestone[]): Product => ({
-  week, slug: `p${week}`, name: `P${week}`, repo: `KavamiDev/p${week}`, isPublic: true,
+const product = (month: number, milestones: Milestone[]): Product => ({
+  month, slug: `p${month}`, name: `P${month}`, repo: `KavamiDev/p${month}`, isPublic: true,
   homepage: null, description: null, milestones,
 });
 
-const WEEK2 = utc("2026-10-28T12:00:00Z"); // Wednesday of week 02
+const DEC = utc("2026-12-15T12:00:00Z"); // month 02 (December)
 
 describe("productStatus", () => {
   it("is shipped as soon as there is a ship", () => {
-    expect(productStatus(product(0, [ms("init", 0, "2026-10-15T08:00:00Z"), ms("ship", 0, "2026-10-18T10:00:00Z")]), WEEK2)).toBe("shipped");
+    expect(productStatus(product(0, [ms("init", 0, "2026-10-15T08:00:00Z"), ms("ship", 0, "2026-10-28T10:00:00Z")]), DEC)).toBe("shipped");
   });
-  it("is in_progress for the current week with milestones", () => {
-    expect(productStatus(product(2, [ms("init", 2, "2026-10-26T08:00:00Z")]), WEEK2)).toBe("in_progress");
+  it("is in_progress for the current month with milestones", () => {
+    expect(productStatus(product(2, [ms("init", 2, "2026-12-02T08:00:00Z")]), DEC)).toBe("in_progress");
   });
-  it("is skipped when its week is past without ship", () => {
-    expect(productStatus(product(1, [ms("init", 1, "2026-10-19T08:00:00Z")]), WEEK2)).toBe("skipped");
+  it("is in_progress when work started ahead of its month", () => {
+    expect(productStatus(product(3, [ms("init", 3, "2026-12-10T08:00:00Z")]), DEC)).toBe("in_progress");
+  });
+  it("is skipped when its month is past without ship", () => {
+    expect(productStatus(product(1, [ms("init", 1, "2026-11-03T08:00:00Z")]), DEC)).toBe("skipped");
   });
   it("is planned otherwise", () => {
-    expect(productStatus(product(5, []), WEEK2)).toBe("planned");
-    expect(productStatus(product(2, []), WEEK2)).toBe("planned");
+    expect(productStatus(product(5, []), DEC)).toBe("planned");
+    expect(productStatus(product(2, []), DEC)).toBe("planned");
   });
 });
 
@@ -49,11 +52,11 @@ describe("productFields", () => {
 });
 
 describe("streak", () => {
-  it("counts consecutive shipped weeks ending at the last finished week", () => {
+  it("counts consecutive shipped months ending at the last finished month", () => {
     expect(streak(new Set([0, 1]), 2)).toBe(2);
     expect(streak(new Set([0, 2]), 3)).toBe(1);
   });
-  it("includes the current week when it is shipped", () => {
+  it("includes the current month when it is shipped", () => {
     expect(streak(new Set([0, 1, 2]), 2)).toBe(3);
   });
   it("is 0 at the start or after a miss", () => {
@@ -63,30 +66,30 @@ describe("streak", () => {
 });
 
 describe("counters", () => {
-  it("computes shipped, streak, revenue and current week", () => {
+  it("computes shipped, streak, revenue and current month", () => {
     const products = [
-      product(0, [ms("ship", 0, "2026-10-18T10:00:00Z"), ms("verdict", 0, "2026-11-17T10:00:00Z", { Revenue: "15 EUR" })]),
-      product(1, [ms("ship", 1, "2026-10-25T10:00:00Z"), ms("verdict", 1, "2026-11-24T10:00:00Z", { Revenue: "10,50 EUR" })]),
-      product(2, [ms("init", 2, "2026-10-26T08:00:00Z")]),
+      product(0, [ms("ship", 0, "2026-10-16T10:00:00Z"), ms("verdict", 0, "2026-11-17T10:00:00Z", { Revenue: "15 EUR" })]),
+      product(1, [ms("ship", 1, "2026-11-28T10:00:00Z"), ms("verdict", 1, "2026-12-28T10:00:00Z", { Revenue: "10,50 EUR" })]),
+      product(2, [ms("init", 2, "2026-12-02T08:00:00Z")]),
     ];
-    expect(counters(products, WEEK2)).toEqual({ currentWeek: 2, shipped: 2, streak: 2, revenue: 25.5 });
+    expect(counters(products, DEC)).toEqual({ currentMonth: 2, shipped: 2, streak: 2, revenue: 25.5 });
   });
   it("is honest when empty", () => {
-    expect(counters([], utc("2026-10-16T12:00:00Z"))).toEqual({ currentWeek: 0, shipped: 0, streak: 0, revenue: 0 });
+    expect(counters([], utc("2026-10-16T12:00:00Z"))).toEqual({ currentMonth: 0, shipped: 0, streak: 0, revenue: 0 });
   });
 });
 
 describe("activityLevels", () => {
-  it("returns 364 days with levels 0..4", () => {
+  it("returns one cell per grid day with levels 0..4", () => {
     const list = [
-      ms("init", 0, "2026-10-12T08:00:00Z"),
-      ...Array.from({ length: 6 }, () => ms("progress", 0, "2026-10-14T08:00:00Z")),
-      ms("init", 0, "2026-10-01T08:00:00Z"), // before week 00, dropped
+      ms("init", 0, "2026-10-01T08:00:00Z"),
+      ...Array.from({ length: 6 }, () => ms("progress", 0, "2026-10-03T08:00:00Z")),
+      ms("init", 0, "2026-09-01T08:00:00Z"), // before the grid, dropped
     ];
     const levels = activityLevels(list);
-    expect(levels).toHaveLength(364);
-    expect(levels[0]).toBe(1);
-    expect(levels[2]).toBe(4);
+    expect(levels).toHaveLength(371);
+    expect(levels[3]).toBe(1); // Thursday 1 October
+    expect(levels[5]).toBe(4);
     expect(levels.reduce((a, b) => a + b, 0)).toBe(5);
   });
 });

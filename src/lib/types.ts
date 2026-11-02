@@ -3,16 +3,16 @@ export type MilestoneType = (typeof TYPES)[number];
 
 export interface ParsedMilestone {
   type: MilestoneType;
-  week: number | null;
+  month: number | null;
   subject: string;
   body: string;
   trailers: Record<string, string>;
 }
 
-export interface Milestone extends Omit<ParsedMilestone, "week"> {
+export interface Milestone extends Omit<ParsedMilestone, "month"> {
   sha: string;
   repo: string; // owner/name
-  week: number;
+  month: number;
   committedAt: number; // ms
   url: string | null; // null when the repo is private
 }
@@ -20,7 +20,7 @@ export interface Milestone extends Omit<ParsedMilestone, "week"> {
 export type Status = "planned" | "in_progress" | "shipped" | "skipped";
 
 export interface Product {
-  week: number;
+  month: number;
   slug: string;
   name: string;
   repo: string;

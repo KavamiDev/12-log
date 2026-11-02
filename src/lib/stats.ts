@@ -1,16 +1,16 @@
 import { site } from "../site.config";
 import { parseAmount } from "./milestone";
 import type { Milestone, Product, Status } from "./types";
-import { currentWeek, dayIndex } from "./week";
+import { currentMonth, dayIndex, GRID_DAYS } from "./month";
 
 const latest = (p: Product, type: Milestone["type"]) =>
   p.milestones.filter((m) => m.type === type).sort((a, b) => b.committedAt - a.committedAt)[0];
 
 export function productStatus(p: Product, now: number): Status {
   if (p.milestones.some((m) => m.type === "ship")) return "shipped";
-  const cur = currentWeek(now);
-  if (p.week === cur && p.milestones.length) return "in_progress";
-  if (p.week < cur) return "skipped";
+  const cur = currentMonth(now);
+  if (p.month >= cur && p.milestones.length) return "in_progress"; // started, possibly ahead of its month
+  if (p.month < cur) return "skipped";
   return "planned";
 }
 
@@ -37,7 +37,7 @@ export function productFields(p: Product) {
   });
 }
 
-/** Consecutive shipped weeks ending at the last finished week, or the current one if shipped. */
+/** Consecutive shipped months ending at the last finished month, or the current one if shipped. */
 export function streak(shipped: Set<number>, current: number): number {
   let w = shipped.has(current) ? current : current - 1;
   let n = 0;
@@ -46,18 +46,18 @@ export function streak(shipped: Set<number>, current: number): number {
 }
 
 export function counters(products: Product[], now: number) {
-  const cur = currentWeek(now);
-  const shipped = new Set(products.filter((p) => productStatus(p, now) === "shipped").map((p) => p.week));
+  const cur = currentMonth(now);
+  const shipped = new Set(products.filter((p) => productStatus(p, now) === "shipped").map((p) => p.month));
   const revenue = products.reduce((sum, p) => sum + (productFields(p).verdict?.revenue ?? 0), 0);
-  return { currentWeek: cur, shipped: shipped.size, streak: streak(shipped, cur), revenue };
+  return { currentMonth: cur, shipped: shipped.size, streak: streak(shipped, cur), revenue };
 }
 
-/** 364 days from week 00, level = milestones that day capped at 4. */
+/** One cell per day of the grid, level = milestones that day capped at 4. */
 export function activityLevels(milestones: Milestone[]): number[] {
-  const levels = new Array<number>(364).fill(0);
+  const levels = new Array<number>(GRID_DAYS).fill(0);
   for (const m of milestones) {
     const d = dayIndex(m.committedAt);
-    if (d >= 0 && d < 364) levels[d] = Math.min(4, levels[d] + 1);
+    if (d >= 0 && d < GRID_DAYS) levels[d] = Math.min(4, levels[d] + 1);
   }
   return levels;
 }

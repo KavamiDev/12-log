@@ -1,9 +1,9 @@
 import { defineConfig } from "astro/config";
 import tailwindcss from "@tailwindcss/vite";
 
-// GitHub Pages project site: https://kavamidev.github.io/52-log/
+// GitHub Pages project site: https://kavamidev.github.io/12-log/
 export default defineConfig({
   site: "https://kavamidev.github.io",
-  base: "/52-log",
+  base: "/12-log",
   vite: { plugins: [tailwindcss()] },
 });

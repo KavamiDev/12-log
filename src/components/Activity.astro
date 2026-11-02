@@ -1,11 +1,11 @@
 ---
 import type { Milestone } from "../lib/types";
 import { activityLevels } from "../lib/stats";
-import { WEEK0, weekStart, dayIndex } from "../lib/week";
+import { GRID0, GRID_DAYS, dayIndex, monthStart } from "../lib/month";
 import { pad, fmtDate } from "../lib/view";
 
-interface Props { milestones: Milestone[]; week: number }
-const { milestones, week } = Astro.props;
+interface Props { milestones: Milestone[]; month: number }
+const { milestones, month } = Astro.props;
 
 const DAY = 86_400_000;
 const levels = activityLevels(milestones);
@@ -14,32 +14,28 @@ for (const m of milestones) {
   const d = dayIndex(m.committedAt);
   subjects.set(d, [...(subjects.get(d) ?? []), `${m.type}: ${m.subject}`]);
 }
-let prev = "";
-const months = Array.from({ length: 52 }, (_, w) => {
-  const t = weekStart(w) + DAY / 2;
-  const m = fmtDate(t, { month: "short" });
-  const show = m !== prev && (w === 0 || Number(fmtDate(t, { day: "numeric" })) <= 7);
-  prev = m;
-  return show ? m : "";
+const at = (i: number) => GRID0 + i * DAY + DAY / 2;
+// A month name above the column (week) that contains its 1st day.
+const columns = Array.from({ length: GRID_DAYS / 7 }, (_, w) => {
+  const first = Array.from({ length: 7 }, (_, d) => at(w * 7 + d)).find((t) => fmtDate(t, { day: "numeric" }) === "1");
+  return first ? fmtDate(first, { month: "short" }) : "";
 });
-const days = levels.map((level, i) => {
-  const t = WEEK0 + i * DAY + DAY / 2;
-  return { level, label: [fmtDate(t, { month: "short", day: "numeric" }), ...(subjects.get(i) ?? [])].join(" · ") };
-});
-const inWeek = milestones.filter((m) => m.week === week).length;
-const range = `${fmtDate(WEEK0 + DAY, { month: "short", year: "numeric" })} to ${fmtDate(WEEK0 + 363 * DAY, { month: "short", year: "numeric" })}`;
+const days = levels.map((level, i) => ({ level, label: [fmtDate(at(i), { month: "short", day: "numeric" }), ...(subjects.get(i) ?? [])].join(" · ") }));
+const inMonth = milestones.filter((m) => m.month === month).length;
+const monthName = fmtDate(monthStart(month) + DAY / 2, { month: "long" });
+const range = `${fmtDate(monthStart(0) + DAY, { month: "short", year: "numeric" })} to ${fmtDate(monthStart(11) + DAY, { month: "short", year: "numeric" })}`;
 ---
-<section aria-label="52-week activity" class="box" style="padding: 16px">
+<section aria-label="Activity over the year" class="box" style="padding: 16px">
   <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-bottom: 14px">
-    <h2 style="margin: 0; font-size: 16px; font-weight: 500">{inWeek} milestone commit{inWeek === 1 ? "" : "s"} in week {pad(week)}</h2>
+    <h2 style="margin: 0; font-size: 16px; font-weight: 500">{inMonth} milestone commit{inMonth === 1 ? "" : "s"} in month {pad(month)} · {monthName}</h2>
     <span style="font-size: 12px; color: #9198a1">{range}</span>
   </div>
   <div style="overflow-x: auto; padding-bottom: 4px" tabindex="0" aria-label="Activity grid, scrollable">
     <div style="display: flex; flex-direction: column; gap: 4px; width: max-content">
       <div style="display: flex; gap: 6px">
         <div style="width: 28px"></div>
-        <div aria-hidden="true" style="display: grid; grid-template-columns: repeat(52, 11px); gap: 3px; font-size: 11px; color: #9198a1; height: 14px">
-          {months.map((m) => <span style="white-space: nowrap; overflow: visible">{m}</span>)}
+        <div aria-hidden="true" style={`display: grid; grid-template-columns: repeat(${columns.length}, 11px); gap: 3px; font-size: 11px; color: #9198a1; height: 14px`}>
+          {columns.map((m) => <span style="white-space: nowrap; overflow: visible">{m}</span>)}
         </div>
       </div>
       <div style="display: flex; gap: 6px">
@@ -53,7 +49,7 @@ const range = `${fmtDate(WEEK0 + DAY, { month: "short", year: "numeric" })} to $
     </div>
   </div>
   <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-top: 12px; font-size: 12px; color: #9198a1">
-    <span>One column per week. One week, one product.</span>
+    <span>One square per day. One month, one product.</span>
     <span style="display: flex; align-items: center; gap: 3px">Less
       {[0, 1, 2, 3, 4].map((l) => <span class={`cell cell-${l}`}></span>)}
       More</span>

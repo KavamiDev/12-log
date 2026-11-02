@@ -24,8 +24,8 @@ describe("buildLog", () => {
     });
     expect(log.products).toHaveLength(1);
     const p = log.products[0];
-    expect(p).toMatchObject({ week: 1, slug: "invoice-buddy", name: "Invoice Buddy", isPublic: true, homepage: "https://invoice-buddy.pages.dev" });
-    expect(p.milestones.map((m) => [m.type, m.week])).toEqual([["init", 1], ["progress", 1]]);
+    expect(p).toMatchObject({ month: 1, slug: "invoice-buddy", name: "Invoice Buddy", isPublic: true, homepage: "https://invoice-buddy.pages.dev" });
+    expect(p.milestones.map((m) => [m.type, m.month])).toEqual([["init", 1], ["progress", 1]]);
   });
 
   it("never reads a repo without the topic", () => {
@@ -65,20 +65,20 @@ describe("buildLog", () => {
       ],
       "KavamiDev/alpha": [commit("init(#00): A", "2026-10-15T05:00:00Z")],
     });
-    expect(log.products.map((p) => [p.week, p.name])).toEqual([[0, "Alpha"], [1, "Zeta Pro"]]);
+    expect(log.products.map((p) => [p.month, p.name])).toEqual([[0, "Alpha"], [1, "Zeta Pro"]]);
     expect(log.products[1].milestones.map((m) => m.type)).toEqual(["init", "ship"]);
   });
 
-  it("drops a repo with no init and no explicit week", () => {
+  it("drops a repo with no init and no explicit month", () => {
     const log = build([repo("p")], { "KavamiDev/p": [commit("progress: hi", "2026-10-19T05:00:00Z")] });
     expect(log.products).toEqual([]);
   });
 
-  it("keeps an explicit week on a non-init commit", () => {
+  it("keeps an explicit month on a non-init commit", () => {
     const log = build([repo("p")], {
       "KavamiDev/p": [commit("init(#01): P", "2026-10-19T05:00:00Z"), commit("verdict(#01): numbers", "2026-11-20T05:00:00Z")],
     });
-    expect(log.products[0].milestones.at(-1)?.week).toBe(1);
+    expect(log.products[0].milestones.at(-1)?.month).toBe(1);
   });
 
   it("dedupes the same sha", () => {

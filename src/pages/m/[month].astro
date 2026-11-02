@@ -5,18 +5,19 @@ import CommitRow from "../../components/CommitRow.astro";
 import { log } from "../../lib/log";
 import type { Product } from "../../lib/types";
 import { productStatus, productFields } from "../../lib/stats";
-import { currentWeek } from "../../lib/week";
+import { currentMonth, MONTHS } from "../../lib/month";
+import { site } from "../../site.config";
 import { pad, href, statusLabel } from "../../lib/view";
 
 export function getStaticPaths() {
-  return log.products.map((p) => ({ params: { week: pad(p.week) }, props: { p } }));
+  return log.products.map((p) => ({ params: { month: pad(p.month) }, props: { p } }));
 }
 
 const { p } = Astro.props as { p: Product };
 const now = Date.now();
 const status = statusLabel[productStatus(p, now)];
 const f = productFields(p);
-const due = p.week === currentWeek(now) && !p.milestones.some((m) => m.type === "ship");
+const due = p.month === currentMonth(now) && !p.milestones.some((m) => m.type === "ship");
 const facts = [
   f.price && ["Price", `€${f.price.amount}`],
   f.hours !== undefined && ["Hours spent", String(f.hours)],
@@ -32,11 +33,11 @@ const links = [
   p.isPublic && ["Repository", `https://github.com/${p.repo}`],
 ].filter(Boolean) as [string, string][];
 ---
-<Base title={`Week ${pad(p.week)} · ${p.name} · 52.log`} description={p.description ?? `Week ${pad(p.week)} of the 52.log challenge.`} fixture={log.fixture}>
+<Base title={`${p.name} · month ${pad(p.month)} · ${site.title}`} description={p.description ?? `Month ${pad(p.month)} of the ${site.title} challenge.`} fixture={log.fixture}>
   <main class="wrap" style="padding-top: 32px; padding-bottom: 64px; display: flex; flex-direction: column; gap: 24px; max-width: 960px">
-    <a href={href()} style="font-size: 14px">← All weeks</a>
+    <a href={href()} style="font-size: 14px">← All months</a>
     <div style="display: flex; flex-direction: column; gap: 10px">
-      <span style="font: 13px var(--font-mono); color: #9198a1">week {pad(p.week)} / 52</span>
+      <span style="font: 13px var(--font-mono); color: #9198a1">month {pad(p.month)} / {MONTHS}</span>
       <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
         <h1 style="margin: 0; font-family: var(--font-display); font-weight: 800; font-size: clamp(28px, 5vw, 44px); line-height: 1.1">{p.name}</h1>
         <span class={`lbl ${status.cls}`}>{status.text}</span>
@@ -61,7 +62,7 @@ const links = [
       <h2 class="h-section">Milestones</h2>
       <div class="box">
         {p.milestones.map((m) => <CommitRow m={m} now={now} />)}
-        {due && <DueRow week={p.week} />}
+        {due && <DueRow month={p.month} />}
       </div>
       {!p.isPublic && <p style="margin: 0; font-size: 12px; color: #9198a1">Private repository: commit links and bodies are hidden.</p>}
     </section>
